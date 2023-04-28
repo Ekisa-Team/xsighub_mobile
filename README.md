@@ -1,6 +1,6 @@
-# xsighub_mobile
+# Xsighub_mobile
 
-A new Flutter project.
+📱 App móvil que se conecta al sistema Hub y registra las firmas de los usuarios.
 
 ## Getting Started
 
