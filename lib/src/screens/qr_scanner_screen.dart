@@ -19,7 +19,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   QRViewController? controller;
   Barcode? result;
 
-  void _qr(QRViewController controller) {
+  void _qrView(QRViewController controller) {
     this.controller = controller;
     controller.scannedDataStream.take(1).listen((event) {
       setState(() {
@@ -52,28 +52,31 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('QR Scanner'),
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Container(
-            height: 400,
-            width: 400,
-            child: QRView(
-              key: _gLobalkey,
-              onQRViewCreated: _qr,
-            ),
-          ),
-        ],
-      ),
-    );
+        appBar: AppBar(
+          title: const Text('QR Scanner'),
+        ),
+        body: _buildQrScanner());
   }
 
   @override
   void dispose() {
     controller?.dispose();
     super.dispose();
+  }
+
+  Widget _buildQrScanner() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        SizedBox(
+          height: 400,
+          width: 400,
+          child: QRView(
+            key: _gLobalkey,
+            onQRViewCreated: _qrView,
+          ),
+        ),
+      ],
+    );
   }
 }

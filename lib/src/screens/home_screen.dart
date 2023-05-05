@@ -127,7 +127,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildScanButton() {
     return ElevatedButton.icon(
-      style: secondaryButtonStyle,
       onPressed: () {
         Navigator.push(
           context,
