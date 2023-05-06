@@ -51,6 +51,16 @@ Para ejecutar la aplicación, siga los siguientes pasos:
 
 El archivo APK se genera automáticamente a través de [GitHub Actions](https://github.com/features/actions) después de un despliegue y se puede encontrar en los [adjuntos de la versión](https://github.com/Ekisa-Team/xsighub_mobile/releases).
 
+Actualmente se generan 3 archivos APK optimizados para diferentes arquitecturas:
+
+- **armeabi-v7a**: Esta es la arquitectura de procesador más común para dispositivos Android. Lo utilizan dispositivos con CPU ARMv7, que se encuentran en la mayoría de los teléfonos inteligentes y tabletas con Android lanzados en los últimos 10 años.
+
+- **arm64-v8a**: Esta es la versión de 64 bits de la arquitectura ARM, utilizada por los dispositivos Android más nuevos con CPU ARMv8.
+
+- **x86_64**: Esta es la versión de 64 bits de la arquitectura x86, utilizada por algunos dispositivos Android con CPU Intel o AMD.
+
+El nombre de los archivos APK sigue la siguiente convención: `xsighub-{{abi}}-release-{{version}}.apk` (e.g., `xsighub-arm64-v8a-release-v0.2.34.apk`).
+
 ### Recursos adicionales
 
 - [Documentación de Flutter](https://flutter.dev/docs)
