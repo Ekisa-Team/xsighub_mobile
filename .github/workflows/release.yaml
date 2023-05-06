@@ -1,9 +1,12 @@
-name: Build and Release APKs
+name: Release
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "v*.*.*"
+      - "v*.*.*-alpha"
+      - "v*.*.*-beta"
+      - "v*.*.*-rc.*"
 
 jobs:
   build-and-release:
@@ -27,6 +30,9 @@ jobs:
           mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build/app/outputs/flutter-apk/xsighub-armeabi-v7a-release-${{ github.ref }}.apk
           mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/app/outputs/flutter-apk/xsighub-arm64-v8a-release-${{ github.ref }}.apk
           mv build/app/outputs/flutter-apk/app-x86_64-release.apk build/app/outputs/flutter-apk/xsighub-x86_64-release-${{ github.ref }}.apk
+          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build/app/outputs/flutter-apk/xsighub-armeabi-v7a-release-${{ github.ref }}.apk
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/app/outputs/flutter-apk/xsighub-arm64-v8a-release-${{ github.ref }}.apk
+          mv build/app/outputs/flutter-apk/app-x86_64-release.apk build/app/outputs/flutter-apk/xsighub-x86_64-release-${{ github.ref }}.apk
 
       - name: Create Release and Upload APKs
         uses: softprops/action-gh-release@v1
@@ -35,9 +41,8 @@ jobs:
             build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
             build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
             build/app/outputs/flutter-apk/app-x86_64-release.apk
-          tag_name: v${{ github.run_number }}
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(github.ref, '-alpha') || contains(github.ref, '-beta') || contains(github.ref, '-rc') }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -55,5 +60,5 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           branch: ${{ github.event.release.target_commitish }}
-          commit_message: Update CHANGELOG
+          commit_message: Update CHANGELOG - ${{ github.ref }}
           file_pattern: CHANGELOG.md
