@@ -27,12 +27,9 @@ jobs:
 
       - name: Rename APKs
         run: |
-          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build/app/outputs/flutter-apk/xsighub-armeabi-v7a-release-${{ github.ref_name }}.apk
-          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/app/outputs/flutter-apk/xsighub-arm64-v8a-release-${{ github.ref_name }}.apk
-          mv build/app/outputs/flutter-apk/app-x86_64-release.apk build/app/outputs/flutter-apk/xsighub-x86_64-release-${{ github.ref_name }}.apk
-          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build/app/outputs/flutter-apk/xsighub-armeabi-v7a-release-${{ github.ref_name }}.apk
-          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/app/outputs/flutter-apk/xsighub-arm64-v8a-release-${{ github.ref_name }}.apk
-          mv build/app/outputs/flutter-apk/app-x86_64-release.apk build/app/outputs/flutter-apk/xsighub-x86_64-release-${{ github.ref_name }}.apk
+          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build/app/outputs/flutter-apk/app-armeabi-v7a-releasex.apk
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/app/outputs/flutter-apk/app-arm64-v8a-releasex.apk
+          mv build/app/outputs/flutter-apk/app-x86_64-release.apk build/app/outputs/flutter-apk/app-x86_64-releasex.apk
 
       - name: Create Release and Upload APKs
         uses: softprops/action-gh-release@v1
