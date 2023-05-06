@@ -22,6 +22,12 @@ jobs:
       - name: Build APKs
         run: flutter build apk --split-per-abi
 
+      - name: Rename APKs
+        run: |
+          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk build/app/outputs/flutter-apk/xsighub-armeabi-v7a-release-${{ github.ref }}.apk
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk build/app/outputs/flutter-apk/xsighub-arm64-v8a-release-${{ github.ref }}.apk
+          mv build/app/outputs/flutter-apk/app-x86_64-release.apk build/app/outputs/flutter-apk/xsighub-x86_64-release-${{ github.ref }}.apk
+
       - name: Create Release and Upload APKs
         uses: softprops/action-gh-release@v1
         with:
@@ -30,7 +36,6 @@ jobs:
             build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
             build/app/outputs/flutter-apk/app-x86_64-release.apk
           tag_name: v${{ github.run_number }}
-          title: Release v${{ github.run_number }}
           draft: false
           prerelease: false
           generate_release_notes: true
@@ -41,9 +46,14 @@ jobs:
         uses: stefanzweifel/changelog-updater-action@v1.2.0
         id: "changelog-updater"
         with:
-          changelogPath: "CHANGELOG.md"
-          releaseVersion: "${{ github.ref }}"
-          release-notes: ${{ github.event.release.body }}
           latest-version: ${{ github.event.release.tag_name }}
+          release-notes: ${{ github.event.release.body }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit updated CHANGELOG
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          branch: ${{ github.event.release.target_commitish }}
+          commit_message: Update CHANGELOG
+          file_pattern: CHANGELOG.md
