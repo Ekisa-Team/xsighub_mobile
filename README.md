@@ -1,16 +1,62 @@
 # Xsighub_mobile
 
-📱 App móvil que se conecta al sistema Hub y registra las firmas de los usuarios.
+📱 Aplicación móvil que se conecta al sistema Hub y registra las firmas de los usuarios.
 
-## Getting Started
+## Cómo empezar
 
-This project is a starting point for a Flutter application.
+Este proyecto es una aplicación Flutter y actualmente solo soporta la plataforma Android. Para comenzar con el proyecto, se requiere lo siguiente:
 
-A few resources to get you started if this is your first Flutter project:
+### Requisitos previos
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- Se debe tener instalado Flutter en el equipo. Puede encontrar las instrucciones de instalación [aquí](https://flutter.dev/docs/get-started/install).
+- Si no ha instalado Android Studio, asegúrese de instalarlo y configurar su entorno de desarrollo de Android. Puede encontrar las instrucciones de instalación [aquí](https://developer.android.com/studio/install).
+- Si va a utilizar VS Code, asegúrese de instalar la extensión de Dart y Flutter. Puede encontrar la extensión [aquí](https://marketplace.visualstudio.com/items?itemName=Dart-Code.flutter).
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Clonar el repositorio
+
+```sh
+git clone https://github.com/Ekisa-Team/xsighub_mobile.git
+```
+
+### Configuración
+
+Para comenzar a trabajar en una nueva característica, se debe seguir los siguientes pasos:
+
+1. Asegúrese de que se encuentra en la rama develop:
+
+   ```sh
+   git checkout develop
+   ```
+
+2. Cree una nueva rama a partir de la rama develop con el siguiente comando:
+
+   ```sh
+   git checkout -b nombre-de-la-rama
+   ```
+
+### Proceso de despliegue
+
+Este proyecto utiliza Gitflow para el control de versiones y el proceso de despligue. Para obtener más información sobre Gitflow, puede visitar este [enlace](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow).
+
+### Ejecutar la aplicación
+
+Para ejecutar la aplicación, siga los siguientes pasos:
+
+1. Abra el proyecto en Android Studio o en VS Code.
+2. Conecte su dispositivo Android a su computadora o inicie un emulador.
+3. Seleccione su dispositivo desde el menú desplegable en la barra de herramientas.
+4. Haga clic en el botón "Run" para ejecutar la aplicación en su dispositivo.
+
+### Generar el archivo APK
+
+El archivo APK se genera automáticamente a través de [GitHub Actions](https://github.com/features/actions) después de un despliegue y se puede encontrar en los [adjuntos de la versión](https://github.com/Ekisa-Team/xsighub_mobile/releases).
+
+### Recursos adicionales
+
+- [Documentación de Flutter](https://flutter.dev/docs)
+- [Catálogo de widgets de Flutter](https://flutter.dev/docs/development/ui/widgets)
+- [Ejemplos y demos de Flutter](https://flutter.dev/docs/cookbook)
+
+### Aplicación complementaria
+
+También se dispone de una aplicación complementaria que permite transferir, almacenar y gestionar las firmas de los usuarios en el Sistema Hub. Para obtener más información sobre esta aplicación, [visite este enlace](https://www.example.com/).
