@@ -59,7 +59,7 @@ Actualmente se generan 3 archivos APK optimizados para diferentes arquitecturas:
 
 - **x86_64**: Esta es la versión de 64 bits de la arquitectura x86, utilizada por algunos dispositivos Android con CPU Intel o AMD.
 
-El nombre de los archivos APK sigue la siguiente convención: `xsighub-{{abi}}-release-{{version}}.apk` (e.g., `xsighub-arm64-v8a-release-v0.2.34.apk`).
+El nombre de los archivos APK sigue la siguiente convención: `xsighub-{{abi}}-release-{{git_tag}}.apk` (e.g., `xsighub-arm64-v8a-release-v0.2.34.apk`).
 
 ### Recursos adicionales
 
