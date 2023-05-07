@@ -7,7 +7,6 @@ import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
 import 'package:xsighub_mobile/src/constants/color_constants.dart';
 import 'package:xsighub_mobile/src/models/session.dart';
 import 'package:xsighub_mobile/src/models/signature_pad_settings.dart';
-import 'package:xsighub_mobile/src/screens/home_screen.dart';
 import 'package:xsighub_mobile/src/services/session_service.dart';
 import 'package:xsighub_mobile/src/theme/button.dart';
 
@@ -21,13 +20,32 @@ class SignatureScreen extends StatefulWidget {
 }
 
 class _SignatureScreenState extends State<SignatureScreen> {
-  late final _sessionService = SessionService();
-  late final _signaturePadKey = GlobalKey<SfSignaturePadState>();
-  late var _signaturePadSettings = SignaturePadSettings();
+  final _sessionService = SessionService();
+
+  final _signaturePadKey = GlobalKey<SfSignaturePadState>();
+  final _signaturePadSettings = SignaturePadSettings();
 
   @override
   void initState() {
     super.initState();
+  }
+
+  void _handleClearButtonPressed() {
+    _signaturePadKey.currentState!.clear();
+  }
+
+  void _handleSaveButtonPressed() async {
+    final signatureData = await _signaturePadKey.currentState!.toImage();
+    final bytes = await signatureData.toByteData(format: ImageByteFormat.png);
+    final imageEncoded =
+        "data:image/png;base64,${base64.encode(bytes!.buffer.asUint8List())}";
+
+    await _sessionService.update(
+      widget.pairingKey ?? '',
+      SessionData(signature: imageEncoded),
+    );
+
+    _signaturePadKey.currentState!.clear();
   }
 
   @override
@@ -37,30 +55,28 @@ class _SignatureScreenState extends State<SignatureScreen> {
       appBar: AppBar(
         title: Text("S:(${widget.pairingKey})"),
         backgroundColor: Colors.black,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          ),
-        ),
         actions: [_buildClearButton(), _buildSaveButton()],
       ),
       body: _buildSignaturePad(),
-      floatingActionButton: _buildCustomizeFloatingButton(),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          _buildCustomizeFloatingButton(),
+        ],
+      ),
     );
   }
 
   Widget _buildCustomizeFloatingButton() {
     return FloatingActionButton(
-      backgroundColor: ColorConstants.primary,
+      backgroundColor: ColorConstants.secondary,
       foregroundColor: ColorConstants.white,
       onPressed: () {
         showModalBottomSheet(
-          backgroundColor: Colors.transparent,
-          isScrollControlled: true,
           context: context,
-          builder: (context) =>
-              _buildModalBottomSheet(_updateSignaturePadSettings),
+          builder: (context) {
+            return _buildModalBottomSheet();
+          },
         );
       },
       child: const Icon(Icons.palette_outlined),
@@ -118,190 +134,94 @@ class _SignatureScreenState extends State<SignatureScreen> {
     );
   }
 
-  Widget _buildModalBottomSheet(
-    Function(SignaturePadSettings) onSettingsUpdated,
-  ) {
-    Color computeContrastingColor(Color color) =>
-        color.computeLuminance() > 0.5 ? Colors.black : Colors.white;
-
-    return StatefulBuilder(
-      builder: (BuildContext context, StateSetter setState) => Wrap(
+  Widget _buildModalBottomSheet() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      child: ListView(
+        shrinkWrap: true,
         children: [
-          BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  const Text(
-                    'Personalizar firma',
-                    style: TextStyle(fontSize: 22),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateColor.resolveWith(
-                          (states) => _signaturePadSettings.backgroundColor),
-                      foregroundColor: MaterialStateColor.resolveWith(
-                          (states) => computeContrastingColor(
-                              _signaturePadSettings.backgroundColor)),
+          const Text('Modal BottomSheet'),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            child: const Text('Background color'),
+            onPressed: () async {
+              final selectedColor = await showDialog<Color>(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text('Select a color'),
+                    content: SingleChildScrollView(
+                      child: MaterialPicker(
+                        pickerColor: _signaturePadSettings.backgroundColor,
+                        onColorChanged: (color) {
+                          Navigator.of(context).pop(color);
+                        },
+                      ),
                     ),
-                    child: const Text('Color de fondo'),
-                    onPressed: () async {
-                      await showDialog<Color>(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text('Seleccionar color'),
-                            content: SingleChildScrollView(
-                              child: MaterialPicker(
-                                pickerColor:
-                                    _signaturePadSettings.backgroundColor,
-                                onColorChanged: (color) {
-                                  setState(() {
-                                    _signaturePadSettings.backgroundColor =
-                                        color;
-                                    onSettingsUpdated(_signaturePadSettings);
-                                    Navigator.of(context).pop();
-                                  });
-                                },
-                              ),
-                            ),
-                          );
+                  );
+                },
+              );
+              if (selectedColor != null) {
+                setState(() {
+                  _signaturePadSettings.backgroundColor = selectedColor;
+                });
+              }
+            },
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            child: const Text('Stroke color'),
+            onPressed: () async {
+              final selectedColor = await showDialog<Color>(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text('Select a color'),
+                    content: SingleChildScrollView(
+                      child: MaterialPicker(
+                        pickerColor: _signaturePadSettings.strokeColor,
+                        onColorChanged: (color) {
+                          Navigator.of(context).pop(color);
                         },
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateColor.resolveWith(
-                          (states) => _signaturePadSettings.strokeColor),
-                      foregroundColor: MaterialStateColor.resolveWith(
-                          (states) => computeContrastingColor(
-                              _signaturePadSettings.strokeColor)),
+                      ),
                     ),
-                    child: const Text('Color del trazo'),
-                    onPressed: () async {
-                      await showDialog<Color>(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text('Seleccionar color'),
-                            content: SingleChildScrollView(
-                              child: MaterialPicker(
-                                pickerColor: _signaturePadSettings.strokeColor,
-                                onColorChanged: (color) {
-                                  setState(() {
-                                    _signaturePadSettings.strokeColor = color;
-                                    onSettingsUpdated(_signaturePadSettings);
-                                    Navigator.of(context).pop();
-                                  });
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  Column(
-                    children: [
-                      Text(
-                        'Ancho mínimo del trazo: ${_signaturePadSettings.minStrokeWidth.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      Slider(
-                        activeColor: _signaturePadSettings.strokeColor,
-                        value: _signaturePadSettings.minStrokeWidth,
-                        min: 0.5,
-                        max: 4.0,
-                        divisions: ((4.0 - 0.5) / 0.1).round(),
-                        onChanged: (value) {
-                          setState(() {
-                            _signaturePadSettings.minStrokeWidth = value;
-                            onSettingsUpdated(_signaturePadSettings);
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Column(
-                    children: [
-                      Text(
-                        'Ancho máximo del trazo: ${_signaturePadSettings.maxStrokeWidth.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      Slider(
-                        activeColor: _signaturePadSettings.strokeColor,
-                        value: _signaturePadSettings.maxStrokeWidth,
-                        min: 4.0,
-                        max: 8.0,
-                        divisions: ((8.0 - 4.0) / 0.1).round(),
-                        onChanged: (value) {
-                          setState(() {
-                            _signaturePadSettings.maxStrokeWidth = value;
-                            onSettingsUpdated(_signaturePadSettings);
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    style: primaryButtonStyle,
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Aceptar'),
-                  ),
-                  const Divider(height: 16),
-                  ElevatedButton(
-                    style: secondaryButtonStyle,
-                    onPressed: () {
-                      setState(() {
-                        _signaturePadSettings = SignaturePadSettings();
-                        onSettingsUpdated(_signaturePadSettings);
-                      });
-                    },
-                    child: const Text('Restablecer valores predeterminados'),
-                  )
-                ],
-              ),
-            ),
-          )
+                  );
+                },
+              );
+              if (selectedColor != null) {
+                setState(() {
+                  _signaturePadSettings.strokeColor = selectedColor;
+                });
+              }
+            },
+          ),
+          const SizedBox(height: 16),
+          const Text('Maximum Stroke Width'),
+          Slider(
+            value: _signaturePadSettings.minStrokeWidth,
+            label: _signaturePadSettings.minStrokeWidth.round().toString(),
+            min: 0.1,
+            max: 3.9,
+            onChanged: (value) =>
+                setState(() => _signaturePadSettings.minStrokeWidth = value),
+          ),
+          const SizedBox(height: 16),
+          const Text('Maximum Stroke Width'),
+          Slider(
+            value: _signaturePadSettings.maxStrokeWidth,
+            label: _signaturePadSettings.maxStrokeWidth.round().toString(),
+            min: 4.0,
+            max: 10.0,
+            onChanged: (value) =>
+                setState(() => _signaturePadSettings.maxStrokeWidth = value),
+          ),
+          // const SizedBox(height: 16),
+          // ElevatedButton(
+          //   child: const Text('Close BottomSheet'),
+          //   onPressed: () => Navigator.pop(context),
+          // ),
         ],
       ),
     );
-  }
-
-  void _updateSignaturePadSettings(SignaturePadSettings settings) {
-    setState(() {
-      _signaturePadSettings.backgroundColor = settings.backgroundColor;
-      _signaturePadSettings.strokeColor = settings.strokeColor;
-      _signaturePadSettings.minStrokeWidth = settings.minStrokeWidth;
-      _signaturePadSettings.maxStrokeWidth = settings.maxStrokeWidth;
-    });
-  }
-
-  void _handleClearButtonPressed() {
-    _signaturePadKey.currentState!.clear();
-  }
-
-  void _handleSaveButtonPressed() async {
-    final signatureData = await _signaturePadKey.currentState!.toImage();
-    final bytes = await signatureData.toByteData(format: ImageByteFormat.png);
-    final imageEncoded =
-        "data:image/png;base64,${base64.encode(bytes!.buffer.asUint8List())}";
-
-    await _sessionService.update(
-      widget.pairingKey ?? '',
-      SessionData(signature: imageEncoded),
-    );
-
-    _signaturePadKey.currentState!.clear();
   }
 }

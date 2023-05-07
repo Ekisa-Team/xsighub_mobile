@@ -69,4 +69,4 @@ El nombre de los archivos APK sigue la siguiente convención: `xsighub-{{abi}}-r
 
 ### Aplicación complementaria
 
-También se dispone de una aplicación complementaria que permite transferir, almacenar y gestionar las firmas de los usuarios en el Sistema Hub. Para obtener más información sobre esta aplicación, [visite este enlace](https://github.com/Ekisa-Team/xsighub).
+También se dispone de una aplicación complementaria que permite transferir, almacenar y gestionar las firmas de los usuarios en el Sistema Hub. Para obtener más información sobre esta aplicación, [visite este enlace](https://www.example.com/).
