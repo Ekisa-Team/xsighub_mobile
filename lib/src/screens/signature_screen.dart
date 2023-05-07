@@ -47,7 +47,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
     _signaturePadKey.currentState!.clear();
   }
 
-  void updateSignaturePadSettings(SignaturePadSettings settings) {
+  void _updateSignaturePadSettings(SignaturePadSettings settings) {
     setState(() {
       _signaturePadSettings.backgroundColor = settings.backgroundColor;
       _signaturePadSettings.strokeColor = settings.strokeColor;
@@ -80,7 +80,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
           isScrollControlled: true,
           context: context,
           builder: (context) =>
-              _buildModalBottomSheet(updateSignaturePadSettings),
+              _buildModalBottomSheet(_updateSignaturePadSettings),
         );
       },
       child: const Icon(Icons.palette_outlined),
