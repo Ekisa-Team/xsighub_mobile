@@ -7,6 +7,7 @@ import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
 import 'package:xsighub_mobile/src/constants/color_constants.dart';
 import 'package:xsighub_mobile/src/models/session.dart';
 import 'package:xsighub_mobile/src/models/signature_pad_settings.dart';
+import 'package:xsighub_mobile/src/screens/home_screen.dart';
 import 'package:xsighub_mobile/src/services/session_service.dart';
 import 'package:xsighub_mobile/src/theme/button.dart';
 
@@ -29,33 +30,6 @@ class _SignatureScreenState extends State<SignatureScreen> {
     super.initState();
   }
 
-  void _handleClearButtonPressed() {
-    _signaturePadKey.currentState!.clear();
-  }
-
-  void _handleSaveButtonPressed() async {
-    final signatureData = await _signaturePadKey.currentState!.toImage();
-    final bytes = await signatureData.toByteData(format: ImageByteFormat.png);
-    final imageEncoded =
-        "data:image/png;base64,${base64.encode(bytes!.buffer.asUint8List())}";
-
-    await _sessionService.update(
-      widget.pairingKey ?? '',
-      SessionData(signature: imageEncoded),
-    );
-
-    _signaturePadKey.currentState!.clear();
-  }
-
-  void _updateSignaturePadSettings(SignaturePadSettings settings) {
-    setState(() {
-      _signaturePadSettings.backgroundColor = settings.backgroundColor;
-      _signaturePadSettings.strokeColor = settings.strokeColor;
-      _signaturePadSettings.minStrokeWidth = settings.minStrokeWidth;
-      _signaturePadSettings.maxStrokeWidth = settings.maxStrokeWidth;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,6 +37,12 @@ class _SignatureScreenState extends State<SignatureScreen> {
       appBar: AppBar(
         title: Text("S:(${widget.pairingKey})"),
         backgroundColor: Colors.black,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          ),
+        ),
         actions: [_buildClearButton(), _buildSaveButton()],
       ),
       body: _buildSignaturePad(),
@@ -296,5 +276,32 @@ class _SignatureScreenState extends State<SignatureScreen> {
         ],
       ),
     );
+  }
+
+  void _updateSignaturePadSettings(SignaturePadSettings settings) {
+    setState(() {
+      _signaturePadSettings.backgroundColor = settings.backgroundColor;
+      _signaturePadSettings.strokeColor = settings.strokeColor;
+      _signaturePadSettings.minStrokeWidth = settings.minStrokeWidth;
+      _signaturePadSettings.maxStrokeWidth = settings.maxStrokeWidth;
+    });
+  }
+
+  void _handleClearButtonPressed() {
+    _signaturePadKey.currentState!.clear();
+  }
+
+  void _handleSaveButtonPressed() async {
+    final signatureData = await _signaturePadKey.currentState!.toImage();
+    final bytes = await signatureData.toByteData(format: ImageByteFormat.png);
+    final imageEncoded =
+        "data:image/png;base64,${base64.encode(bytes!.buffer.asUint8List())}";
+
+    await _sessionService.update(
+      widget.pairingKey ?? '',
+      SessionData(signature: imageEncoded),
+    );
+
+    _signaturePadKey.currentState!.clear();
   }
 }

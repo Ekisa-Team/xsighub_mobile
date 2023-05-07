@@ -26,8 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (context.mounted) {
-        Navigator.push(
-          context,
+        Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) =>
                 SignatureScreen(pairingKey: session.pairingKey),
@@ -87,49 +86,41 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildTextField(),
+          TextFormField(
+            controller: _pairingKeyController,
+            keyboardType: TextInputType.number,
+            decoration:
+                const InputDecoration(hintText: '### ###', filled: true),
+            style: const TextStyle(fontSize: 60),
+            maxLength: 6,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            textAlign: TextAlign.center,
+            validator: (value) {
+              if (value == null || value.isEmpty || value.length < 6) {
+                return 'Ingrese un código de emparejamiento válido';
+              }
+              return null;
+            },
+          ),
           const SizedBox(height: 16.0),
-          _buildConnectButton(),
+          ElevatedButton(
+            style: primaryButtonStyle,
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                _connect();
+              }
+            },
+            child: const Text('Conectar'),
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildTextField() {
-    return TextFormField(
-      controller: _pairingKeyController,
-      keyboardType: TextInputType.number,
-      decoration: const InputDecoration(hintText: '### ###', filled: true),
-      style: const TextStyle(fontSize: 60),
-      maxLength: 6,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      textAlign: TextAlign.center,
-      validator: (value) {
-        if (value == null || value.isEmpty || value.length < 6) {
-          return 'Ingrese un código de emparejamiento válido';
-        }
-        return null;
-      },
-    );
-  }
-
-  Widget _buildConnectButton() {
-    return ElevatedButton(
-      style: primaryButtonStyle,
-      onPressed: () {
-        if (_formKey.currentState!.validate()) {
-          _connect();
-        }
-      },
-      child: const Text('Conectar'),
     );
   }
 
   Widget _buildScanButton() {
     return ElevatedButton.icon(
       onPressed: () {
-        Navigator.push(
-          context,
+        Navigator.of(context).push(
           MaterialPageRoute(builder: (context) => const QrScannerScreen()),
         );
       },
