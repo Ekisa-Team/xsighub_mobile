@@ -20,12 +20,14 @@ git clone https://github.com/Ekisa-Team/xsighub_mobile.git
 
 ### Configuración
 
-Para comenzar a trabajar en una nueva característica, se debe seguir los siguientes pasos:
+Este proyecto utiliza trunk-based development para el control de versiones y el proceso de despliegue. Trunk-based development es un enfoque de desarrollo que implica la integración continua de cambios en una única rama principal, conocida como el tronco. Para obtener más información sobre trunk-based development, puede visitar este [enlace](https://trunkbaseddevelopment.com/).
 
-1. Asegúrese de que se encuentra en la rama develop:
+Para comenzar a trabajar en una nueva característica, se deben seguir los siguientes pasos:
+
+1. Asegúrese de que se encuentra en la rama principal:
 
    ```sh
-   git checkout develop
+   git checkout main
    ```
 
 2. Cree una nueva rama a partir de la rama develop con el siguiente comando:
@@ -34,9 +36,32 @@ Para comenzar a trabajar en una nueva característica, se debe seguir los siguie
    git checkout -b nombre-de-la-rama
    ```
 
-### Proceso de despliegue
+3. Desarrolle y pruebe su nueva característica en la rama recién creada.
 
-Este proyecto utiliza Gitflow para el control de versiones y el proceso de despligue. Para obtener más información sobre Gitflow, puede visitar este [enlace](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow).
+4. Una vez que la característica está lista, haga una [solicitud de extracción (pull request)](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests) para integrar los cambios en la rama principal.
+
+5. Si es necesario, haga ajustes en la característica y repita el proceso de revisión y solicitud de extracción.
+
+Para realizar un depliegue, siga estos pasos:
+
+1. Asegúrese de que la rama principal está actualizada y estable.
+
+   ```sh
+   git checkout main
+   git pull origin main
+   ```
+
+2. Cree un nuevo tag para marcar el despliegue.
+
+   ```sh
+   git tag v0.0.0
+   ```
+
+3. Suba el tag al repositorio remoto.
+
+   ```sh
+   git push origin v0.0.0
+   ```
 
 ### Ejecutar la aplicación
 
