@@ -42,27 +42,6 @@ Para comenzar a trabajar en una nueva característica, se deben seguir los sigui
 
 5. Si es necesario, haga ajustes en la característica y repita el proceso de revisión y solicitud de extracción.
 
-Para realizar un depliegue, siga estos pasos:
-
-1. Asegúrese de que la rama principal está actualizada y estable.
-
-   ```sh
-   git checkout main
-   git pull origin main
-   ```
-
-2. Cree un nuevo tag para marcar el despliegue.
-
-   ```sh
-   git tag v0.0.0
-   ```
-
-3. Suba el tag al repositorio remoto.
-
-   ```sh
-   git push origin v0.0.0
-   ```
-
 ### Ejecutar la aplicación
 
 Para ejecutar la aplicación, siga los siguientes pasos:
@@ -85,6 +64,28 @@ Actualmente se generan 3 archivos APK optimizados para diferentes arquitecturas:
 - **x86_64**: Esta es la versión de 64 bits de la arquitectura x86, utilizada por algunos dispositivos Android con CPU Intel o AMD.
 
 El nombre de los archivos APK sigue la siguiente convención: `xsighub-{{abi}}-release-{{git_tag}}.apk` (e.g., `xsighub-arm64-v8a-release-v0.2.34.apk`).
+
+### Realizar despliegue
+
+Para desplegar una nueva versión de este proyecto, se deben seguir los siguientes pasos:
+
+1. Ejecutar el script `./scripts/release.sh` y seguir las instrucciones para especificar el tipo de versión que desea publicar ("major", "minor" o "patch") y si desea agregar un alcance a la versión (por ejemplo, "alpha", "beta" o "stable").
+
+2. Verificar que los cambios y la etiqueta de Git se hayan publicado correctamente en el repositorio remoto. Adicionalmente, debe haber un workflow generando los APKs y la nueva versión.
+
+#### Sumatoria de acciones
+
+El script `release.sh` es una herramienta que automatiza el proceso de publicar una nueva versión de este proyecto. El script realiza los siguientes pasos:
+
+- Pide al usuario que especifique el tipo de versión que desea publicar y si desea agregar un alcance a la versión.
+- Actualiza automáticamente el archivo pubspec.yaml con la nueva versión especificada.
+- Crea automáticamente una etiqueta de Git con la nueva versión especificada.
+- Crea automáticamente un commit con el mensaje "Bump version to [nueva versión]" y sube los cambios al repositorio remoto.
+- Sube la etiqueta de Git al repositorio remoto.
+- Una vez que la etiqueta ha sido subida, el pipeline de GitHub Actions se encargará de generar automáticamente los APKs para la nueva versión.
+
+> _Note_
+> Asegúrese de darle permisos de ejecución al script (`chmod +x .scripts/release.sh`)
 
 ### Recursos adicionales
 
