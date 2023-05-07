@@ -135,21 +135,33 @@ class _SignatureScreenState extends State<SignatureScreen> {
   }
 
   Widget _buildModalBottomSheet() {
+    Color getContrastingColor(Color color) =>
+        color.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       child: ListView(
         shrinkWrap: true,
         children: [
-          const Text('Modal BottomSheet'),
+          const Text(
+            'Personalizar firma',
+            style: TextStyle(fontSize: 22),
+          ),
           const SizedBox(height: 16),
           ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateColor.resolveWith(
+                  (states) => _signaturePadSettings.backgroundColor),
+              foregroundColor: MaterialStateColor.resolveWith((states) =>
+                  getContrastingColor(_signaturePadSettings.backgroundColor)),
+            ),
             child: const Text('Background color'),
             onPressed: () async {
               final selectedColor = await showDialog<Color>(
                 context: context,
                 builder: (context) {
                   return AlertDialog(
-                    title: const Text('Select a color'),
+                    title: const Text('Seleccionar color'),
                     content: SingleChildScrollView(
                       child: MaterialPicker(
                         pickerColor: _signaturePadSettings.backgroundColor,
@@ -170,13 +182,19 @@ class _SignatureScreenState extends State<SignatureScreen> {
           ),
           const SizedBox(height: 16),
           ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: MaterialStateColor.resolveWith(
+                  (states) => _signaturePadSettings.strokeColor),
+              foregroundColor: MaterialStateColor.resolveWith((states) =>
+                  getContrastingColor(_signaturePadSettings.strokeColor)),
+            ),
             child: const Text('Stroke color'),
             onPressed: () async {
               final selectedColor = await showDialog<Color>(
                 context: context,
                 builder: (context) {
                   return AlertDialog(
-                    title: const Text('Select a color'),
+                    title: const Text('Seleccionar color'),
                     content: SingleChildScrollView(
                       child: MaterialPicker(
                         pickerColor: _signaturePadSettings.strokeColor,
@@ -215,11 +233,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
             onChanged: (value) =>
                 setState(() => _signaturePadSettings.maxStrokeWidth = value),
           ),
-          // const SizedBox(height: 16),
-          // ElevatedButton(
-          //   child: const Text('Close BottomSheet'),
-          //   onPressed: () => Navigator.pop(context),
-          // ),
+          const SizedBox(height: 32),
         ],
       ),
     );
