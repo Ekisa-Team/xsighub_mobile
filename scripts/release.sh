@@ -68,7 +68,7 @@ fi
 new_version_prefixed="v${new_version}"
 
 # Create git tag with new version
-git tag -a "v$new_version_prefixed" -m "Release $new_version_prefixed"
+git tag -a "$new_version_prefixed" -m "Release $new_version_prefixed"
 echo "Created git tag $new_version_prefixed"
 
 # Update pubspec.yaml with new version
