@@ -65,7 +65,7 @@ if [ -n "$release_scope" ]; then
     new_version="${new_version}-${release_scope}"
 fi
 
-new_version_prefixed = "v${new_version}"
+new_version_prefixed="v${new_version}"
 
 # Create git tag with new version
 git tag -a "v$new_version_prefixed" -m "Release $new_version_prefixed"
@@ -84,5 +84,5 @@ git push origin HEAD
 echo "Pushed pubspec.yaml changes"
 
 # Push git tag
-git push origin $new_version
+git push origin $new_version_prefixed
 echo "Pushed git tag $new_version_prefixed. Check https://github.com/Ekisa-Team/xsighub_mobile/actions to follow up the active workflow."
