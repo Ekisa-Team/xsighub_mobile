@@ -88,7 +88,7 @@ El script `release.sh` es una herramienta que automatiza el proceso de publicar 
 > Asegúrese de darle permisos de ejecución al script (`chmod +x .scripts/release.sh`)
 
 > **Note**
-> Si es un usuario de Windows, necesitará instalar un shell de Bash en su sistema antes de poder ejecutar el script.
+> Si es un usuario de Windows, necesitará instalar un shell de Bash en su sistema antes de poder ejecutar el script. Otra opción es utilizar Windows Subsystem for Linux (WSL).
 
 ### Recursos adicionales
 
