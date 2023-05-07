@@ -84,7 +84,7 @@ El script `release.sh` es una herramienta que automatiza el proceso de publicar 
 - Sube la etiqueta de Git al repositorio remoto.
 - Una vez que la etiqueta ha sido subida, el pipeline de GitHub Actions se encargará de generar automáticamente los APKs para la nueva versión.
 
-> *Note*
+> **Note**
 > Asegúrese de darle permisos de ejecución al script (`chmod +x .scripts/release.sh`)
 
 ### Recursos adicionales
