@@ -31,6 +31,24 @@ class SessionDocumentService extends HttpService<SessionDocument> {
         data: data.toJson(),
       );
 
+  Future<SessionDocument> attachSignature(
+    int documentId,
+    SessionDocumentSignature data,
+  ) async =>
+      super.patch(
+        endpoint: '$documentId/signatures/attach',
+        data: data.toJson(),
+      );
+
+  Future<SessionDocument> detachSignature(
+    int documentId,
+    SessionDocumentSignature data,
+  ) async =>
+      super.patch(
+        endpoint: '$documentId/signatures/detach',
+        data: data.toJson(),
+      );
+
   Future<SessionDocument> delete(
     int documentId,
   ) async =>

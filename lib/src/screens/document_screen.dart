@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:xsighub_mobile/src/markdown_builders/signature_builder.dart';
 import 'package:xsighub_mobile/src/screens/home_screen.dart';
+import 'package:xsighub_mobile/src/screens/signature_screen.dart';
 import 'package:xsighub_mobile/src/services/session_document_service.dart';
 
 class DocumentScreen extends StatefulWidget {
@@ -51,6 +53,23 @@ class _DocumentScreenState extends State<DocumentScreen> {
             Expanded(
               child: Markdown(
                 data: rawMarkdown,
+                inlineSyntaxes: [SignatureSyntax()],
+                builders: {
+                  'signature': SignatureBuilder(onPressed: (signatureName) {
+                    Navigator.pop(context);
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => SignatureScreen(
+                          referenceId: widget.referenceId,
+                          documentId: widget.documentId,
+                          signatureName: signatureName,
+                          incomingSource:
+                              SignatureScreenIncomingSource.document,
+                        ),
+                      ),
+                    );
+                  }),
+                },
               ),
             ),
           ],

@@ -3,12 +3,15 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
 import 'package:xsighub_mobile/src/constants/color_constants.dart';
+import 'package:xsighub_mobile/src/models/session_document.dart';
 import 'package:xsighub_mobile/src/models/session_signature.dart';
 import 'package:xsighub_mobile/src/models/signature_pad_settings.dart';
 import 'package:xsighub_mobile/src/screens/document_screen.dart';
 import 'package:xsighub_mobile/src/screens/home_screen.dart';
+import 'package:xsighub_mobile/src/services/session_document_service.dart';
 import 'package:xsighub_mobile/src/services/session_signature_service.dart';
 import 'package:xsighub_mobile/src/theme/button.dart';
 
@@ -22,11 +25,13 @@ class SignatureScreen extends StatefulWidget {
     Key? key,
     this.referenceId,
     this.documentId,
+    this.signatureName,
     this.incomingSource,
   }) : super(key: key);
 
   final int? referenceId;
   final int? documentId;
+  final String? signatureName;
   final SignatureScreenIncomingSource? incomingSource;
 
   @override
@@ -35,6 +40,8 @@ class SignatureScreen extends StatefulWidget {
 
 class _SignatureScreenState extends State<SignatureScreen> {
   late final _sessionSignatureService = SessionSignatureService();
+  late final _sessionDocumentService = SessionDocumentService();
+
   late final _signaturePadKey = GlobalKey<SfSignaturePadState>();
   late var _signaturePadSettings = SignaturePadSettings();
 
@@ -306,6 +313,10 @@ class _SignatureScreenState extends State<SignatureScreen> {
 
   void _handleSaveButtonPressed() async {
     try {
+      EasyLoading.show(
+        status: 'Enviando firma al servidor...',
+      );
+
       final signatureData = await _signaturePadKey.currentState!.toImage();
       final imageBytes =
           await signatureData.toByteData(format: ImageByteFormat.png);
@@ -313,12 +324,23 @@ class _SignatureScreenState extends State<SignatureScreen> {
           "data:image/png;base64,${base64.encode(imageBytes!.buffer.asUint8List())}";
 
       if (widget.incomingSource == SignatureScreenIncomingSource.document) {
-        MaterialPageRoute(
-          builder: (context) => DocumentScreen(
-            referenceId: widget.referenceId,
-            documentId: widget.documentId,
+        await _sessionDocumentService.attachSignature(
+          widget.documentId!,
+          SessionDocumentSignature(
+            signatureName: widget.signatureName!,
+            signatureData: imageEncoded,
           ),
         );
+
+        if (context.mounted) {
+          Navigator.pop(context);
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => DocumentScreen(
+              referenceId: widget.referenceId,
+              documentId: widget.documentId,
+            ),
+          ));
+        }
       } else {
         await _sessionSignatureService.create(
           SessionSignature(
@@ -337,6 +359,8 @@ class _SignatureScreenState extends State<SignatureScreen> {
       );
 
       MaterialPageRoute(builder: (context) => const HomeScreen());
+    } finally {
+      EasyLoading.dismiss();
     }
   }
 }
