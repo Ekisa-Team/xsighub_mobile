@@ -5,23 +5,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
 import 'package:xsighub_mobile/src/constants/color_constants.dart';
-import 'package:xsighub_mobile/src/models/session.dart';
+import 'package:xsighub_mobile/src/models/session_signature.dart';
 import 'package:xsighub_mobile/src/models/signature_pad_settings.dart';
+import 'package:xsighub_mobile/src/screens/document_screen.dart';
 import 'package:xsighub_mobile/src/screens/home_screen.dart';
-import 'package:xsighub_mobile/src/services/session_service.dart';
+import 'package:xsighub_mobile/src/services/session_signature_service.dart';
 import 'package:xsighub_mobile/src/theme/button.dart';
 
-class SignatureScreen extends StatefulWidget {
-  const SignatureScreen({Key? key, this.pairingKey}) : super(key: key);
+enum SignatureScreenIncomingSource {
+  standalone,
+  document,
+}
 
-  final String? pairingKey;
+class SignatureScreen extends StatefulWidget {
+  const SignatureScreen({
+    Key? key,
+    this.referenceId,
+    this.documentId,
+    this.incomingSource,
+  }) : super(key: key);
+
+  final int? referenceId;
+  final int? documentId;
+  final SignatureScreenIncomingSource? incomingSource;
 
   @override
   State<SignatureScreen> createState() => _SignatureScreenState();
 }
 
 class _SignatureScreenState extends State<SignatureScreen> {
-  late final _sessionService = SessionService();
+  late final _sessionSignatureService = SessionSignatureService();
   late final _signaturePadKey = GlobalKey<SfSignaturePadState>();
   late var _signaturePadSettings = SignaturePadSettings();
 
@@ -33,9 +46,9 @@ class _SignatureScreenState extends State<SignatureScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: ColorConstants.white,
       appBar: AppBar(
-        title: Text("S:(${widget.pairingKey})"),
+        title: Text("Ref: ${widget.referenceId}"),
         backgroundColor: Colors.black,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -292,16 +305,38 @@ class _SignatureScreenState extends State<SignatureScreen> {
   }
 
   void _handleSaveButtonPressed() async {
-    final signatureData = await _signaturePadKey.currentState!.toImage();
-    final bytes = await signatureData.toByteData(format: ImageByteFormat.png);
-    final imageEncoded =
-        "data:image/png;base64,${base64.encode(bytes!.buffer.asUint8List())}";
+    try {
+      final signatureData = await _signaturePadKey.currentState!.toImage();
+      final imageBytes =
+          await signatureData.toByteData(format: ImageByteFormat.png);
+      final imageEncoded =
+          "data:image/png;base64,${base64.encode(imageBytes!.buffer.asUint8List())}";
 
-    await _sessionService.update(
-      widget.pairingKey ?? '',
-      SessionData(signature: imageEncoded),
-    );
+      if (widget.incomingSource == SignatureScreenIncomingSource.document) {
+        MaterialPageRoute(
+          builder: (context) => DocumentScreen(
+            referenceId: widget.referenceId,
+            documentId: widget.documentId,
+          ),
+        );
+      } else {
+        await _sessionSignatureService.create(
+          SessionSignature(
+            signatureData: imageEncoded,
+            referenceId: widget.referenceId!,
+          ),
+        );
 
-    _signaturePadKey.currentState!.clear();
+        _signaturePadKey.currentState!.clear();
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString()),
+        ),
+      );
+
+      MaterialPageRoute(builder: (context) => const HomeScreen());
+    }
   }
 }

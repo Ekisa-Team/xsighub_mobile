@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:xsighub_mobile/src/models/session.dart';
-import 'package:xsighub_mobile/src/screens/signature_screen.dart';
 import 'package:xsighub_mobile/src/services/session_service.dart';
 
 class QrScannerScreen extends StatefulWidget {
@@ -70,7 +69,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       alignment: Alignment.bottomCenter,
       child: Padding(
         padding: const EdgeInsets.all(24.0),
-        child: FutureBuilder<bool?>(
+        child: FutureBuilder(
           future: controller?.getFlashStatus(),
           builder: (context, snapshot) {
             bool isFlashOn = snapshot.data ?? false;
@@ -126,16 +125,16 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
       scannedCode = scannedData.code;
 
-      if (context.mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                SignatureScreen(pairingKey: session.pairingKey),
-          ),
-          (route) => false,
-        );
-      }
+      // if (context.mounted) {
+      //   Navigator.pushAndRemoveUntil(
+      //     context,
+      //     MaterialPageRoute(
+      //       builder: (context) =>
+      //           SignatureScreen(pairingKey: session.pairingKey),
+      //     ),
+      //     (route) => false,
+      //   );
+      // }
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

@@ -24,7 +24,7 @@ jobs:
       - run: flutter --version
 
       - name: Build APKs
-        run: flutter build apk --split-per-abi
+        run: flutter build apk --split-per-abi --dart-define=ENVIRONMENT=prod
 
       - name: Rename APKs
         run: |
