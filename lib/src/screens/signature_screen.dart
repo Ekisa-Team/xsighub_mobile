@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:syncfusion_flutter_signaturepad/signaturepad.dart';
 import 'package:xsighub_mobile/src/constants/color_constants.dart';
 import 'package:xsighub_mobile/src/models/session_document.dart';
@@ -45,18 +46,26 @@ class _SignatureScreenState extends State<SignatureScreen> {
   late final _signaturePadKey = GlobalKey<SfSignaturePadState>();
   late var _signaturePadSettings = SignaturePadSettings();
 
+  bool _isSignatureEmpty = true;
+
   @override
   void initState() {
     super.initState();
+
+    SharedPreferences.getInstance().then((prefs) async {
+      final signaturePadSettings = prefs.getString('signaturePadSettings');
+
+      _updateSignaturePadSettings(signaturePadSettings == null
+          ? SignaturePadSettings()
+          : SignaturePadSettings.fromJson(jsonDecode(signaturePadSettings)));
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ColorConstants.white,
       appBar: AppBar(
         title: Text("Ref: ${widget.referenceId}"),
-        backgroundColor: Colors.black,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).push(
@@ -89,7 +98,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
 
   Widget _buildClearButton() {
     return IconButton(
-      onPressed: _handleClearButtonPressed,
+      onPressed: _isSignatureEmpty ? null : _handleClearButtonPressed,
       icon: const Icon(Icons.delete_outline_rounded),
     );
   }
@@ -97,9 +106,9 @@ class _SignatureScreenState extends State<SignatureScreen> {
   Widget _buildSaveButton() {
     return ElevatedButton.icon(
       style: successButtonStyle,
-      onPressed: _handleSaveButtonPressed,
-      icon: const Icon(Icons.upload_rounded),
-      label: const Text("Guardar"),
+      onPressed: _isSignatureEmpty ? null : _handleSaveButtonPressed,
+      icon: const Icon(Icons.draw_rounded),
+      label: const Text("Firmar"),
     );
   }
 
@@ -131,6 +140,11 @@ class _SignatureScreenState extends State<SignatureScreen> {
               strokeColor: _signaturePadSettings.strokeColor,
               minimumStrokeWidth: _signaturePadSettings.minStrokeWidth,
               maximumStrokeWidth: _signaturePadSettings.maxStrokeWidth,
+              onDrawEnd: () {
+                setState(() {
+                  _isSignatureEmpty = false;
+                });
+              },
             ),
           ),
         ),
@@ -156,7 +170,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
                 children: [
                   const Text(
                     'Personalizar firma',
-                    style: TextStyle(fontSize: 22),
+                    style: TextStyle(fontSize: 22, color: Colors.white),
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
@@ -231,7 +245,8 @@ class _SignatureScreenState extends State<SignatureScreen> {
                     children: [
                       Text(
                         'Ancho mínimo del trazo: ${_signaturePadSettings.minStrokeWidth.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 16),
+                        style:
+                            const TextStyle(fontSize: 16, color: Colors.white),
                       ),
                       Slider(
                         activeColor: _signaturePadSettings.strokeColor,
@@ -253,7 +268,8 @@ class _SignatureScreenState extends State<SignatureScreen> {
                     children: [
                       Text(
                         'Ancho máximo del trazo: ${_signaturePadSettings.maxStrokeWidth.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 16),
+                        style:
+                            const TextStyle(fontSize: 16, color: Colors.white),
                       ),
                       Slider(
                         activeColor: _signaturePadSettings.strokeColor,
@@ -283,8 +299,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
                     style: secondaryButtonStyle,
                     onPressed: () {
                       setState(() {
-                        _signaturePadSettings = SignaturePadSettings();
-                        onSettingsUpdated(_signaturePadSettings);
+                        onSettingsUpdated(SignaturePadSettings());
                       });
                     },
                     child: const Text('Restablecer valores predeterminados'),
@@ -305,10 +320,18 @@ class _SignatureScreenState extends State<SignatureScreen> {
       _signaturePadSettings.minStrokeWidth = settings.minStrokeWidth;
       _signaturePadSettings.maxStrokeWidth = settings.maxStrokeWidth;
     });
+
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setString('signaturePadSettings', jsonEncode(settings.toJson()));
+    });
   }
 
   void _handleClearButtonPressed() {
     _signaturePadKey.currentState!.clear();
+
+    setState(() {
+      _isSignatureEmpty = true;
+    });
   }
 
   void _handleSaveButtonPressed() async {
@@ -361,6 +384,10 @@ class _SignatureScreenState extends State<SignatureScreen> {
       MaterialPageRoute(builder: (context) => const HomeScreen());
     } finally {
       EasyLoading.dismiss();
+
+      setState(() {
+        _isSignatureEmpty = true;
+      });
     }
   }
 }

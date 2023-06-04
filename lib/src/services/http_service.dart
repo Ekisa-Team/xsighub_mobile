@@ -83,7 +83,8 @@ abstract class HttpService<ModelType> {
     final responseBody = json.decode(response.body);
 
     if (response.statusCode < 200 || response.statusCode >= 400) {
-      final String message = responseBody['responseMessage']?.toString() ??
+      final String message = responseBody['message']?.toString() ??
+          responseBody['responseMessage']?.toString() ??
           'Ocurrió un error en la solicitud.';
 
       throw Exception(message);

@@ -1,11 +1,15 @@
+import 'dart:convert';
+
 class SessionDocument {
   int? id;
   String rawContent;
+  Map<String, dynamic>? metadata;
   int referenceId;
 
   SessionDocument({
     this.id,
     required this.rawContent,
+    this.metadata,
     required this.referenceId,
   });
 
@@ -13,6 +17,7 @@ class SessionDocument {
     return SessionDocument(
       id: json['id'] as int,
       rawContent: json['rawContent'] as String,
+      metadata: json['metadata'] == null ? null : jsonDecode(json['metadata']),
       referenceId: json['referenceId'] as int,
     );
   }
@@ -21,6 +26,7 @@ class SessionDocument {
     return {
       'id': id,
       'rawContent': rawContent,
+      'metadata': metadata,
       'referenceId': referenceId,
     };
   }

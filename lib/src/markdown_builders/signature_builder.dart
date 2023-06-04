@@ -13,7 +13,8 @@ class SignatureSyntax extends md.InlineSyntax {
     final signatureText = match[2];
 
     final textElement = md.Element.text('signature', signatureText ?? 'Firmar');
-    textElement.attributes['signatureName'] = signatureName ?? '';
+    textElement.attributes['signatureName'] =
+        signatureName ?? '--unknown-signature--';
 
     parser.addNode(textElement);
 
@@ -32,9 +33,9 @@ class SignatureBuilder extends MarkdownElementBuilder {
   Widget visitElementAfter(md.Element element, TextStyle? preferredStyle) {
     if (element.tag == 'signature') {
       return ElevatedButton.icon(
-        onPressed: () => onPressed(element.attributes['signatureName']),
         label: Text(element.textContent),
         icon: const Icon(Icons.draw_rounded),
+        onPressed: () => onPressed(element.attributes['signatureName']),
       );
     }
 

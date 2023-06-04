@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:xsighub_mobile/src/markdown_builders/signature_builder.dart';
+import 'package:xsighub_mobile/src/models/session_document.dart';
 import 'package:xsighub_mobile/src/screens/home_screen.dart';
 import 'package:xsighub_mobile/src/screens/signature_screen.dart';
 import 'package:xsighub_mobile/src/services/session_document_service.dart';
@@ -22,26 +23,33 @@ class DocumentScreen extends StatefulWidget {
 class _DocumentScreenState extends State<DocumentScreen> {
   final _sessionDocumentService = SessionDocumentService();
 
+  late SessionDocument? _document = null;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _sessionDocumentService.findById(widget.documentId!).then((document) {
+      setState(() {
+        _document = document;
+        _document!.rawContent = _parseDocumentMetadata(_document!);
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Ref: ${widget.referenceId} - Doc: ${widget.documentId}"),
-        backgroundColor: Colors.black,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
+        appBar: AppBar(
+          title: Text("Ref: ${widget.referenceId} - Doc: ${widget.documentId}"),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+            ),
           ),
         ),
-      ),
-      body: FutureBuilder(
-        future: _sessionDocumentService.findById(widget.documentId!),
-        builder: (context, snapshot) {
-          return _buildDocument(snapshot.data?.rawContent ?? '');
-        },
-      ),
-    );
+        body: _buildDocument(_document?.rawContent ?? ''));
   }
 
   Widget _buildDocument(String rawMarkdown) {
@@ -53,7 +61,9 @@ class _DocumentScreenState extends State<DocumentScreen> {
             Expanded(
               child: Markdown(
                 data: rawMarkdown,
-                inlineSyntaxes: [SignatureSyntax()],
+                inlineSyntaxes: [
+                  SignatureSyntax(),
+                ],
                 builders: {
                   'signature': SignatureBuilder(onPressed: (signatureName) {
                     Navigator.pop(context);
@@ -76,5 +86,21 @@ class _DocumentScreenState extends State<DocumentScreen> {
         ),
       ),
     );
+  }
+
+  String _parseDocumentMetadata(SessionDocument document) {
+    String parsedContent = document.rawContent;
+
+    if (document.metadata == null) return parsedContent;
+
+    for (var entry in document.metadata!.entries) {
+      final metadataName = entry.key;
+      final data = entry.value ?? '';
+
+      parsedContent =
+          parsedContent.replaceAll('[metadata:$metadataName]', data);
+    }
+
+    return parsedContent;
   }
 }

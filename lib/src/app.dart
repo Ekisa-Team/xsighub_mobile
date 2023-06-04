@@ -11,7 +11,6 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: 'Xsighub',
       theme: ThemeData.light(useMaterial3: true),
-      darkTheme: ThemeData.dark(useMaterial3: true),
       color: ColorConstants.primary,
       onGenerateRoute: routes,
       builder: EasyLoading.init(),

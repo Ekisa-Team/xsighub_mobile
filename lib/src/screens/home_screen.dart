@@ -27,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _formKey = GlobalKey<FormState>();
   final _pairingKeyController = TextEditingController();
 
-  late SessionReference? standaloneReference = null;
+  SessionReference? standaloneReference = null;
   late List<SessionReference>? documentReferences = [];
 
   bool _isPaired = false;
@@ -291,6 +291,8 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _isPaired = false;
         _pairingKeyController.text = '';
+        standaloneReference = null;
+        documentReferences = [];
       });
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
