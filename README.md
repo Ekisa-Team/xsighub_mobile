@@ -27,7 +27,7 @@ Para comenzar a trabajar en una nueva característica, se deben seguir los sigui
 1. Asegúrese de que se encuentra en la rama principal:
 
    ```sh
-   git checkout main
+   git checkout trunk
    ```
 
 2. Cree una nueva rama a partir de la rama develop con el siguiente comando:
