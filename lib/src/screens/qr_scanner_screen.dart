@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'package:xsighub_mobile/src/models/session.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:xsighub_mobile/src/screens/home_screen.dart';
 import 'package:xsighub_mobile/src/services/session_service.dart';
 
 class QrScannerScreen extends StatefulWidget {
@@ -16,14 +17,16 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
   late final _sessionService = SessionService();
   late final _qrKey = GlobalKey();
 
-  QRViewController? controller;
-  String? scannedCode;
+  QRViewController? _controller;
+  String? _scannedCode;
 
   @override
   void reassemble() {
     super.reassemble();
 
-    Platform.isAndroid ? controller!.pauseCamera() : controller!.resumeCamera();
+    Platform.isAndroid
+        ? _controller!.pauseCamera()
+        : _controller!.resumeCamera();
   }
 
   @override
@@ -40,7 +43,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
   @override
   void dispose() {
-    controller?.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
@@ -70,13 +73,13 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: FutureBuilder(
-          future: controller?.getFlashStatus(),
+          future: _controller?.getFlashStatus(),
           builder: (context, snapshot) {
             bool isFlashOn = snapshot.data ?? false;
 
             return ElevatedButton.icon(
               onPressed: () {
-                controller?.toggleFlash();
+                _controller?.toggleFlash();
                 setState(() {});
               },
               icon: isFlashOn
@@ -92,16 +95,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
   void _onQRViewCreated(QRViewController controller) {
     setState(() {
-      this.controller = controller;
+      _controller = controller;
     });
 
-    controller.scannedDataStream
-        .takeWhile((event) => event.code != scannedCode)
-        .listen((event) {
-      _connect(event);
-
-      setState(() {});
-    });
+    _controller!.scannedDataStream.take(1).listen((event) => _connect(event));
   }
 
   void _onPermissionSet(
@@ -120,21 +117,20 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
   void _connect(Barcode scannedData) async {
     try {
-      final Session session =
-          await _sessionService.pair(scannedData.code ?? '');
+      _scannedCode = scannedData.code;
 
-      scannedCode = scannedData.code;
+      await _sessionService.pair(_scannedCode.toString());
 
-      // if (context.mounted) {
-      //   Navigator.pushAndRemoveUntil(
-      //     context,
-      //     MaterialPageRoute(
-      //       builder: (context) =>
-      //           SignatureScreen(pairingKey: session.pairingKey),
-      //     ),
-      //     (route) => false,
-      //   );
-      // }
+      final prefs = await SharedPreferences.getInstance();
+
+      await prefs.setString('pairingKey', _scannedCode.toString());
+
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

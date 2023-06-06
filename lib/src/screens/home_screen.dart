@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:xsighub_mobile/src/environment.dart';
 import 'package:xsighub_mobile/src/models/session.dart';
 import 'package:xsighub_mobile/src/models/session_document.dart';
@@ -33,9 +33,9 @@ class _HomeScreenState extends State<HomeScreen> {
   late SessionReference? _standaloneReference = null;
   late List<SessionReference>? _documentReferences = [];
 
-  final IO.Socket _socket = IO.io(
+  final io.Socket _socket = io.io(
     Environment.config.gateway,
-    IO.OptionBuilder()
+    io.OptionBuilder()
         .setTransports(['websocket'])
         .disableAutoConnect()
         .build(),
@@ -84,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(12.0),
                 children: [
                   _buildFormContainer(),
                   if (!_isPaired) const QrScannerButtonWidget(),
@@ -223,7 +223,28 @@ class _HomeScreenState extends State<HomeScreen> {
                     ListTile(
                       leading: const Icon(Icons.document_scanner_rounded),
                       title: Text(reference.name),
-                      trailing: const Icon(Icons.arrow_outward_rounded),
+                      trailing: reference.documents!.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.more_vert_rounded),
+                              onPressed: () {
+                                showModalBottomSheet(
+                                  isScrollControlled: true,
+                                  context: context,
+                                  builder: (context) {
+                                    return Container(
+                                      constraints: BoxConstraints(
+                                        maxHeight:
+                                            MediaQuery.of(context).size.height *
+                                                0.75,
+                                      ),
+                                      child: _buildDocumentSelector(
+                                          reference.documents!),
+                                    );
+                                  },
+                                );
+                              },
+                            )
+                          : const SizedBox.shrink(),
                       onTap: () async {
                         try {
                           EasyLoading.show(
@@ -232,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
 
                           await Future.delayed(
-                              const Duration(milliseconds: 500));
+                              const Duration(milliseconds: 300));
 
                           final document = await _sessionDocumentService.create(
                             SessionDocument(
@@ -275,12 +296,42 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildDocumentSelector(List<SessionDocument> documents) {
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: documents
+            .map(
+              (document) => ListTile(
+                leading: const Icon(Icons.library_books_rounded),
+                title: Text('Documento: ${document.id}'),
+                trailing: const Icon(Icons.arrow_outward_rounded),
+                onTap: () async {
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => DocumentScreen(
+                          referenceId: document.referenceId,
+                          documentId: document.id,
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+
   Future<void> _connect() async {
     if (_pairingKeyController.text.isEmpty) return;
 
     EasyLoading.show(status: 'Estableciendo conexión con el servidor...');
 
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 300));
 
     try {
       _session = await _sessionService.findByPairingKey(

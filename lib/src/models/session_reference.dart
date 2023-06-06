@@ -1,3 +1,4 @@
+import 'package:xsighub_mobile/src/models/session_document.dart';
 import 'package:xsighub_mobile/src/models/session_signature.dart';
 
 class SessionReference {
@@ -6,6 +7,7 @@ class SessionReference {
   String name;
   String? documentPlaceholder;
   List<SessionSignature>? signatures;
+  List<SessionDocument>? documents;
   int sessionId;
 
   SessionReference({
@@ -14,6 +16,7 @@ class SessionReference {
     required this.name,
     this.documentPlaceholder,
     this.signatures = const [],
+    this.documents = const [],
     required this.sessionId,
   });
 
@@ -22,12 +25,17 @@ class SessionReference {
         .map((signatureJson) => SessionSignature.fromJson(signatureJson))
         .toList();
 
+    final documents = (json['documents'] as List<dynamic>)
+        .map((documentJson) => SessionDocument.fromJson(documentJson))
+        .toList();
+
     return SessionReference(
       id: json['id'] as int,
       type: json['type'] as String,
       name: json['name'] as String,
       documentPlaceholder: json['documentPlaceholder'] as String?,
       signatures: signatures,
+      documents: documents,
       sessionId: json['sessionId'] as int,
     );
   }
@@ -38,7 +46,8 @@ class SessionReference {
       'type': type,
       'name': name,
       'documentPlaceholder': documentPlaceholder,
-      'signatures': signatures?.map((s) => s.toJson()).toList(),
+      'signatures': signatures?.map((signature) => signature.toJson()).toList(),
+      'documents': documents?.map((document) => document.toJson()).toList(),
       'sessionId': sessionId,
     };
   }

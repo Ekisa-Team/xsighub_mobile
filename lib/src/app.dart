@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:xsighub_mobile/src/constants/color_constants.dart';
 import 'package:xsighub_mobile/src/routes/index.dart';
 
 class App extends StatelessWidget {
@@ -10,8 +9,15 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Xsighub',
-      theme: ThemeData.light(useMaterial3: true),
-      color: ColorConstants.primary,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
+      ),
+      themeMode: ThemeMode.light,
       onGenerateRoute: routes,
       builder: EasyLoading.init(),
     );

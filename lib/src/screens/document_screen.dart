@@ -75,7 +75,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
 
   Widget _buildDocument(String rawMarkdown) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(6.0),
       child: Center(
         child: Column(
           children: [

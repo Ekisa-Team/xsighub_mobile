@@ -72,7 +72,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
             MaterialPageRoute(builder: (context) => const HomeScreen()),
           ),
         ),
-        actions: [_buildClearButton(), _buildSaveButton()],
+        actions: [_buildClearButton(), _buildSignButton()],
       ),
       body: _buildSignaturePad(),
       floatingActionButton: _buildCustomizeFloatingButton(),
@@ -103,9 +103,8 @@ class _SignatureScreenState extends State<SignatureScreen> {
     );
   }
 
-  Widget _buildSaveButton() {
+  Widget _buildSignButton() {
     return ElevatedButton.icon(
-      style: successButtonStyle,
       onPressed: _isSignatureEmpty ? null : _handleSaveButtonPressed,
       icon: const Icon(Icons.draw_rounded),
       label: const Text("Firmar"),
@@ -340,7 +339,7 @@ class _SignatureScreenState extends State<SignatureScreen> {
         status: 'Enviando firma al servidor...',
       );
 
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 300));
 
       final signatureData = await _signaturePadKey.currentState!.toImage();
       final imageBytes =
