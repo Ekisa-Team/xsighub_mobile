@@ -5,5 +5,8 @@ class ConfigProd implements BaseConfig {
   String get api => 'https://xsighub.azurewebsites.net/api';
 
   @override
+  String get gateway => 'https://xsighub.azurewebsites.net/sessions';
+
+  @override
   String get version => 'v=1.0';
 }

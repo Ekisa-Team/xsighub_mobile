@@ -340,6 +340,8 @@ class _SignatureScreenState extends State<SignatureScreen> {
         status: 'Enviando firma al servidor...',
       );
 
+      await Future.delayed(const Duration(milliseconds: 500));
+
       final signatureData = await _signaturePadKey.currentState!.toImage();
       final imageBytes =
           await signatureData.toByteData(format: ImageByteFormat.png);

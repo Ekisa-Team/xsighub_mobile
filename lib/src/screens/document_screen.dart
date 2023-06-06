@@ -29,12 +29,33 @@ class _DocumentScreenState extends State<DocumentScreen> {
   void initState() {
     super.initState();
 
-    _sessionDocumentService.findById(widget.documentId!).then((document) {
-      setState(() {
-        _document = document;
-        _document!.rawContent = _parseDocumentMetadata(_document!);
+    try {
+      _sessionDocumentService
+          .findById(widget.documentId!)
+          .then((document) async {
+        setState(
+          () => _document = document,
+        );
+
+        if (!(await _validateMetadata())) return;
+        if (!(await _validateSignatures())) return;
+
+        setState(
+          () => _document!.rawContent = _parseDocumentMetadata(_document!),
+        );
       });
-    });
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString()),
+        ),
+      );
+
+      Navigator.of(context).pop();
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    }
   }
 
   @override
@@ -102,5 +123,113 @@ class _DocumentScreenState extends State<DocumentScreen> {
     }
 
     return parsedContent;
+  }
+
+  Future<bool> _validateMetadata() {
+    final metadataPattern = RegExp(r"\[metadata(?:\:\w+)?\]");
+
+    final matches = metadataPattern.allMatches(_document?.rawContent ?? '');
+
+    if (matches.isEmpty) {
+      return Future.value(true);
+    }
+
+    for (final match in matches) {
+      final name = match.group(0);
+
+      if (name == "[metadata]") {
+        showDialog(
+          context: context,
+          builder: (context) => _buildAlertForMisconfiguredDocument(),
+        );
+
+        return Future.value(false);
+      }
+    }
+
+    return Future.value(true);
+  }
+
+  Future<bool> _validateSignatures() {
+    final signaturesPattern = RegExp(r'\[signature:(.*?)\]\((.*?)\)');
+
+    final matches = signaturesPattern.allMatches(_document?.rawContent ?? '');
+
+    if (matches.isEmpty) {
+      return Future.value(true);
+    }
+
+    final signatureEntities = <String, String>{};
+
+    for (final match in matches) {
+      final name = match.group(1)!;
+      final data = match.group(2)!;
+
+      if (name.isEmpty || data.isEmpty) {
+        showDialog(
+          context: context,
+          builder: (context) => _buildAlertForMisconfiguredDocument(),
+        );
+
+        return Future.value(false);
+      }
+
+      if (data.startsWith('data:image/png;base64,')) {
+        final base64Data = data.substring('data:image/png;base64,'.length);
+        signatureEntities[name] = base64Data;
+      }
+    }
+
+    if (signatureEntities.length == matches.length) {
+      showDialog(
+        context: context,
+        builder: (context) => _buildAlertForDocumentAlreadySigned(),
+      );
+    }
+
+    return Future.value(true);
+  }
+
+  Widget _buildAlertForMisconfiguredDocument() {
+    return AlertDialog(
+      title: const Text('Documento incorrecto'),
+      content: const Text(
+          'Se detectaron configuraciones incorrectas en el documento. Asegúrese de que las entidades tengan un nombre asignado.'),
+      actions: [
+        TextButton(
+          child: const Text('Aceptar'),
+          onPressed: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAlertForDocumentAlreadySigned() {
+    return AlertDialog(
+      title: const Text('El documento ha sido firmado'),
+      content: const Text('¿Qué desea hacer a continuación?'),
+      actions: [
+        TextButton(
+          child: const Text('Permanecer aquí'),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        TextButton(
+          child: const Text('Regresar a Inicio'),
+          onPressed: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+            );
+          },
+        ),
+      ],
+    );
   }
 }

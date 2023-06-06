@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:xsighub_mobile/src/environment.dart';
 import 'package:xsighub_mobile/src/models/session.dart';
 import 'package:xsighub_mobile/src/models/session_document.dart';
 import 'package:xsighub_mobile/src/models/session_reference.dart';
@@ -27,8 +29,17 @@ class _HomeScreenState extends State<HomeScreen> {
   final _formKey = GlobalKey<FormState>();
   final _pairingKeyController = TextEditingController();
 
-  SessionReference? standaloneReference = null;
-  late List<SessionReference>? documentReferences = [];
+  late Session? _session = null;
+  late SessionReference? _standaloneReference = null;
+  late List<SessionReference>? _documentReferences = [];
+
+  final IO.Socket _socket = IO.io(
+    Environment.config.gateway,
+    IO.OptionBuilder()
+        .setTransports(['websocket'])
+        .disableAutoConnect()
+        .build(),
+  );
 
   bool _isPaired = false;
 
@@ -36,34 +47,75 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
-    SharedPreferences.getInstance().then((prefs) {
-      setState(() {
-        _pairingKeyController.text = prefs.getString('pairingKey') ?? '';
-      });
+    SharedPreferences.getInstance().then((prefs) async {
+      final pairingKey = prefs.getString('pairingKey') ?? '';
 
-      _connect();
+      if (pairingKey.isNotEmpty) {
+        setState(() {
+          _pairingKeyController.text = pairingKey;
+        });
+
+        await _connect();
+      }
     });
+
+    _setupSocketEvents();
+  }
+
+  @override
+  void dispose() {
+    _socket.disconnect();
+
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasStandaloneReference = _standaloneReference != null;
+    final hasDocumentReferences = _documentReferences?.isNotEmpty ?? false;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inicio'),
+        automaticallyImplyLeading: false,
       ),
-      body: SingleChildScrollView(
-        child: Container(
-          margin: const EdgeInsets.all(12.0),
-          child: Wrap(
-            runSpacing: 16,
-            children: [
-              _buildFormContainer(),
-              if (!_isPaired) const QrScannerButtonWidget(),
-              if (standaloneReference != null) _buildStandaloneRefContainer(),
-              if (documentReferences!.isNotEmpty) _buildDocumentRefsContainer(),
-              // const VersionTextWidget()
-            ],
-          ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: [
+                  _buildFormContainer(),
+                  if (!_isPaired) const QrScannerButtonWidget(),
+                  if (hasStandaloneReference) _buildStandaloneRefContainer(),
+                  if (hasDocumentReferences) _buildDocumentRefsContainer(),
+                  if (_session != null &&
+                      !hasStandaloneReference &&
+                      !hasDocumentReferences)
+                    Column(
+                      children: [
+                        const SizedBox(height: 120.0),
+                        const Text(
+                          'Detectando referencias adjuntas a la sesión.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16.0),
+                        ),
+                        const SizedBox(height: 16.0),
+                        Icon(
+                          Icons.satellite_alt_rounded,
+                          size: 48.0,
+                          color: Colors.grey[400],
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+            // const SizedBox(height: 16.0),
+            // const VersionTextWidget(),
+            // const SizedBox(height: 16.0)
+          ],
         ),
       ),
     );
@@ -127,15 +179,15 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListTile(
         leading: const Icon(Icons.post_add_rounded),
         title: const Text('Firma independiente'),
-        subtitle:
-            Text('#${standaloneReference!.id} - ${standaloneReference!.name}'),
+        subtitle: Text(
+            '#${_standaloneReference!.id} - ${_standaloneReference!.name}'),
         trailing: const Icon(Icons.arrow_outward_rounded),
         onTap: () {
           Navigator.pop(context);
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => SignatureScreen(
-                referenceId: standaloneReference!.id,
+                referenceId: _standaloneReference!.id,
                 incomingSource: SignatureScreenIncomingSource.standalone,
               ),
             ),
@@ -161,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Card(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: documentReferences!.asMap().entries.map(
+            children: _documentReferences!.asMap().entries.map(
               (entry) {
                 final index = entry.key;
                 final reference = entry.value;
@@ -178,6 +230,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             status:
                                 'Creando documento con referencia ${reference.id}...',
                           );
+
+                          await Future.delayed(
+                              const Duration(milliseconds: 500));
 
                           final document = await _sessionDocumentService.create(
                             SessionDocument(
@@ -208,7 +263,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         }
                       },
                     ),
-                    if (index >= 0 && index < documentReferences!.length - 1)
+                    if (index >= 0 && index < _documentReferences!.length - 1)
                       const Divider(),
                   ],
                 );
@@ -220,33 +275,25 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _connect() async {
+  Future<void> _connect() async {
     if (_pairingKeyController.text.isEmpty) return;
 
     EasyLoading.show(status: 'Estableciendo conexión con el servidor...');
 
+    await Future.delayed(const Duration(milliseconds: 500));
+
     try {
-      final Session session = await _sessionService.findByPairingKey(
+      _session = await _sessionService.findByPairingKey(
         _pairingKeyController.text,
       );
 
-      SharedPreferences.getInstance().then((prefs) {
-        prefs.setString('pairingKey', session.pairingKey);
-      });
-
-      await _sessionService.pair(session.pairingKey);
-
-      setState(() {
-        _isPaired = true;
-      });
-
-      if (context.mounted && session.references!.isEmpty) {
+      if (context.mounted && _session!.references!.isEmpty) {
         showDialog(
           context: context,
-          builder: (BuildContext context) => AlertDialog(
+          builder: (context) => AlertDialog(
             title: const Text('No se encontraron referencias'),
             content: Text(
-              'Por favor, adjunte referencias a la sesión ${session.id} desde el cliente web (${session.connection?.clientIp}) para acceder a la pantalla de firmas.',
+              'La conexión con el servidor se ha establecido correctamente, sin embargo, no se han encontrado referencias. Por favor, asegúrese de adjuntar las referencias correspondientes a la sesión ${_session!.pairingKey} desde el cliente web (${_session!.connection?.clientIp}) para poder acceder a la pantalla de firmas.',
             ),
             actions: [
               TextButton(
@@ -256,19 +303,19 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         );
-      } else {
-        standaloneReference = session.references
-            ?.firstWhereOrNull((ref) => ref.type == 'standalone');
-
-        documentReferences =
-            session.references?.where((ref) => ref.type == 'document').toList();
       }
+
+      await _pairSession();
+
+      _socket.connect();
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString()),
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.toString()),
+          ),
+        );
+      }
 
       _disconnect();
     } finally {
@@ -288,12 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       prefs.remove('pairingKey');
 
-      setState(() {
-        _isPaired = false;
-        _pairingKeyController.text = '';
-        standaloneReference = null;
-        documentReferences = [];
-      });
+      _resetState();
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -301,5 +343,70 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _pairSession() async {
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setString('pairingKey', _session!.pairingKey);
+    });
+
+    await _sessionService.pair(_session!.pairingKey);
+
+    setState(() {
+      _isPaired = true;
+    });
+  }
+
+  void _updateReferences() {
+    if (mounted) {
+      setState(() {
+        _standaloneReference = _session?.references
+            ?.firstWhereOrNull((ref) => ref.type == 'standalone');
+
+        _documentReferences = _session?.references
+            ?.where((ref) => ref.type == 'document')
+            .toList();
+      });
+    }
+  }
+
+  void _setupSocketEvents() {
+    _socket.onConnect((data) {
+      _updateReferences();
+    });
+
+    _socket.on('sessionUpdated', (data) {
+      if (mounted) {
+        setState(() {
+          _session = Session.fromJson(data['session']);
+        });
+
+        _updateReferences();
+      }
+    });
+
+    _socket.on('sessionUnpaired', (data) {
+      _socket.disconnect();
+      _resetState();
+    });
+
+    _socket.on('sessionDestroyed', (data) {
+      _socket.disconnect();
+      _resetState();
+    });
+  }
+
+  void _resetState() {
+    if (mounted) {
+      setState(() {
+        _isPaired = false;
+        _pairingKeyController.text = '';
+        _session = null;
+        _standaloneReference = null;
+        _documentReferences = [];
+      });
+    }
+
+    _socket.disconnect();
   }
 }
