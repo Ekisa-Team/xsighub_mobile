@@ -72,7 +72,6 @@ class _SignatureScreenState extends State<SignatureScreen> {
             MaterialPageRoute(builder: (context) => const HomeScreen()),
           ),
         ),
-        actions: [_buildClearButton(), _buildSignButton()],
       ),
       body: _buildSignaturePad(),
       floatingActionButton: _buildCustomizeFloatingButton(),
@@ -96,57 +95,60 @@ class _SignatureScreenState extends State<SignatureScreen> {
     );
   }
 
-  Widget _buildClearButton() {
-    return IconButton(
-      onPressed: _isSignatureEmpty ? null : _handleClearButtonPressed,
-      icon: const Icon(Icons.delete_outline_rounded),
-    );
-  }
-
-  Widget _buildSignButton() {
-    return ElevatedButton.icon(
-      onPressed: _isSignatureEmpty ? null : _handleSaveButtonPressed,
-      icon: const Icon(Icons.draw_rounded),
-      label: const Text("Firmar"),
-    );
-  }
-
   Widget _buildSignaturePad() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Padding(
-          padding: const EdgeInsets.all(10),
-          child: Container(
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.shade600,
-                  spreadRadius: 1,
-                  blurRadius: 15,
-                  offset: const Offset(5, 5),
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade900,
+                    border: const Border(
+                      bottom: BorderSide(
+                        width: 3.0,
+                        color: Colors.black,
+                        style: BorderStyle.solid,
+                      ),
+                    ),
+                  ),
+                  child: SfSignaturePad(
+                    key: _signaturePadKey,
+                    backgroundColor: _signaturePadSettings.backgroundColor,
+                    strokeColor: _signaturePadSettings.strokeColor,
+                    minimumStrokeWidth: _signaturePadSettings.minStrokeWidth,
+                    maximumStrokeWidth: _signaturePadSettings.maxStrokeWidth,
+                    onDrawEnd: () {
+                      setState(() {
+                        _isSignatureEmpty = false;
+                      });
+                    },
+                  ),
                 ),
-                const BoxShadow(
-                    color: Colors.white,
-                    offset: Offset(-5, -5),
-                    blurRadius: 15,
-                    spreadRadius: 1),
+                const SizedBox(height: 48),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed:
+                          _isSignatureEmpty ? null : _handleClearButtonPressed,
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      label: const Text('Limpiar'),
+                    ),
+                    const SizedBox(width: 16),
+                    ElevatedButton.icon(
+                      style: primaryButtonStyle,
+                      onPressed:
+                          _isSignatureEmpty ? null : _handleSaveButtonPressed,
+                      icon: const Icon(Icons.draw),
+                      label: const Text('Firmar'),
+                    )
+                  ],
+                )
               ],
-            ),
-            child: SfSignaturePad(
-              key: _signaturePadKey,
-              backgroundColor: _signaturePadSettings.backgroundColor,
-              strokeColor: _signaturePadSettings.strokeColor,
-              minimumStrokeWidth: _signaturePadSettings.minStrokeWidth,
-              maximumStrokeWidth: _signaturePadSettings.maxStrokeWidth,
-              onDrawEnd: () {
-                setState(() {
-                  _isSignatureEmpty = false;
-                });
-              },
-            ),
-          ),
-        ),
+            )),
       ],
     );
   }

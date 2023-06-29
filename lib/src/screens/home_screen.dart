@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:xsighub_mobile/src/environment.dart';
 import 'package:xsighub_mobile/src/models/session.dart';
-import 'package:xsighub_mobile/src/models/session_document.dart';
 import 'package:xsighub_mobile/src/models/session_reference.dart';
 import 'package:xsighub_mobile/src/screens/document_screen.dart';
 import 'package:xsighub_mobile/src/screens/signature_screen.dart';
@@ -14,6 +13,7 @@ import 'package:xsighub_mobile/src/services/session_document_service.dart';
 import 'package:xsighub_mobile/src/services/session_service.dart';
 import 'package:xsighub_mobile/src/theme/button.dart';
 import 'package:xsighub_mobile/src/widgets/qr_scanner_button.dart';
+import 'package:xsighub_mobile/src/widgets/version_text.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -71,50 +71,43 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hasStandaloneReference = _standaloneReference != null;
-    final hasDocumentReferences = _documentReferences?.isNotEmpty ?? false;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inicio'),
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(12.0),
-                children: [
-                  _buildFormContainer(),
-                  if (!_isPaired) const QrScannerButtonWidget(),
-                  if (hasStandaloneReference) _buildStandaloneRefContainer(),
-                  if (hasDocumentReferences) _buildDocumentRefsContainer(),
-                  if (_session != null &&
-                      !hasStandaloneReference &&
-                      !hasDocumentReferences)
-                    Column(
-                      children: [
-                        const SizedBox(height: 120.0),
-                        const Text(
-                          'Detectando referencias adjuntas a la sesión.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16.0),
-                        ),
-                        const SizedBox(height: 16.0),
-                        Icon(
-                          Icons.satellite_alt_rounded,
-                          size: 48.0,
-                          color: Colors.grey[400],
-                        ),
-                      ],
-                    ),
-                ],
-              ),
+            ListView(
+              padding: const EdgeInsets.all(12.0),
+              children: [
+                _buildFormContainer(),
+                if (!_isPaired) const QrScannerButtonWidget(),
+                if (_session != null)
+                  Column(
+                    children: [
+                      const SizedBox(height: 120.0),
+                      Text(
+                        'Escuchando señales desde el cliente ${_session!.connection?.clientIp ?? '0.0.0.0'}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 16.0),
+                      ),
+                      const SizedBox(height: 16.0),
+                      Icon(
+                        Icons.satellite_alt_rounded,
+                        size: 48.0,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 64.0),
+                    ],
+                  ),
+              ],
             ),
-            // const SizedBox(height: 16.0),
-            // const VersionTextWidget(),
-            // const SizedBox(height: 16.0)
+            const Align(
+              alignment: Alignment.bottomCenter,
+              child: VersionTextWidget(),
+            ),
           ],
         ),
       ),
@@ -170,158 +163,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildStandaloneRefContainer() {
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.post_add_rounded),
-        title: const Text('Firma independiente'),
-        subtitle: Text(
-            '#${_standaloneReference!.id} - ${_standaloneReference!.name}'),
-        trailing: const Icon(Icons.arrow_outward_rounded),
-        onTap: () {
-          Navigator.pop(context);
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => SignatureScreen(
-                referenceId: _standaloneReference!.id,
-                incomingSource: SignatureScreenIncomingSource.standalone,
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildDocumentRefsContainer() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: 16.0),
-        const Text(
-          'Documentos registrados',
-          style: TextStyle(
-            fontSize: 18.0,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8.0),
-        Card(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: _documentReferences!.asMap().entries.map(
-              (entry) {
-                final index = entry.key;
-                final reference = entry.value;
-
-                return Column(
-                  children: [
-                    ListTile(
-                      leading: const Icon(Icons.document_scanner_rounded),
-                      title: Text(reference.name),
-                      trailing: reference.documents!.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.more_vert_rounded),
-                              onPressed: () {
-                                showModalBottomSheet(
-                                  isScrollControlled: true,
-                                  context: context,
-                                  builder: (context) {
-                                    return Container(
-                                      constraints: BoxConstraints(
-                                        maxHeight:
-                                            MediaQuery.of(context).size.height *
-                                                0.75,
-                                      ),
-                                      child: _buildDocumentSelector(
-                                          reference.documents!),
-                                    );
-                                  },
-                                );
-                              },
-                            )
-                          : const SizedBox.shrink(),
-                      onTap: () async {
-                        try {
-                          EasyLoading.show(
-                            status:
-                                'Creando documento con referencia ${reference.id}...',
-                          );
-
-                          await Future.delayed(
-                              const Duration(milliseconds: 300));
-
-                          final document = await _sessionDocumentService.create(
-                            SessionDocument(
-                              rawContent: reference.documentPlaceholder!,
-                              referenceId: reference.id!,
-                            ),
-                          );
-
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => DocumentScreen(
-                                  referenceId: document.referenceId,
-                                  documentId: document.id,
-                                ),
-                              ),
-                            );
-                          }
-                        } catch (error) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(error.toString()),
-                            ),
-                          );
-                        } finally {
-                          EasyLoading.dismiss();
-                        }
-                      },
-                    ),
-                    if (index >= 0 && index < _documentReferences!.length - 1)
-                      const Divider(),
-                  ],
-                );
-              },
-            ).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDocumentSelector(List<SessionDocument> documents) {
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: documents
-            .map(
-              (document) => ListTile(
-                leading: const Icon(Icons.library_books_rounded),
-                title: Text('Documento: ${document.id}'),
-                trailing: const Icon(Icons.arrow_outward_rounded),
-                onTap: () async {
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => DocumentScreen(
-                          referenceId: document.referenceId,
-                          documentId: document.id,
-                        ),
-                      ),
-                    );
-                  }
-                },
-              ),
-            )
-            .toList(),
       ),
     );
   }
@@ -444,6 +285,37 @@ class _HomeScreenState extends State<HomeScreen> {
     _socket.on('sessionDestroyed', (data) {
       _socket.disconnect();
       _resetState();
+    });
+
+    _socket.on('referenceOpenedRequested', (data) {
+      final event = data['body'];
+
+      if (context.mounted) {
+        switch (event['kind']) {
+          case 'standalone':
+            Navigator.pop(context);
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => SignatureScreen(
+                  referenceId: event['referenceId'],
+                  incomingSource: SignatureScreenIncomingSource.standalone,
+                ),
+              ),
+            );
+            break;
+          case 'document':
+            Navigator.pop(context);
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => DocumentScreen(
+                  referenceId: event['referenceId'],
+                  documentId: event['documentId'],
+                ),
+              ),
+            );
+            break;
+        }
+      }
     });
   }
 

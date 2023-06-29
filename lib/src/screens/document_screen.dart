@@ -221,7 +221,7 @@ class _DocumentScreenState extends State<DocumentScreen> {
           },
         ),
         TextButton(
-          child: const Text('Regresar a Inicio'),
+          child: const Text('Regresar al Inicio'),
           onPressed: () {
             Navigator.of(context).pop();
             Navigator.of(context).push(

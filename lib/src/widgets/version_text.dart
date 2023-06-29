@@ -16,9 +16,9 @@ class VersionTextWidget extends StatelessWidget {
         } else {
           final version = snapshot.data?.version ?? '';
           return Text(
-            'v$version',
+            '# v$version',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 18.0),
+            style: TextStyle(fontSize: 16.0, color: Colors.grey.shade700),
           );
         }
       },
