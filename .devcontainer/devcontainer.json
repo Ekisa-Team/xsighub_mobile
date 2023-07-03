@@ -1,0 +1,28 @@
+{
+  "name": "Flutter DevContainer",
+  "build": {
+    "dockerfile": "../Dockerfile"
+  },
+  "forwardPorts": [8080],
+  "remoteUser": "vscode",
+  "postCreateCommand": "flutter doctor && flutter pub get",
+  "customizations": {
+    "vscode": {
+      "extensions": ["Dart-Code.flutter", "alexisvt.flutter-snippets"],
+      "settings": {
+        "[dart]": {
+          "editor.formatOnSave": true,
+          "editor.formatOnType": true,
+          "editor.rulers": [80],
+          "editor.selectionHighlight": false,
+          "editor.suggest.snippetsPreventQuickSuggestions": false,
+          "editor.suggestSelection": "first",
+          "editor.tabCompletion": "onlySnippets",
+          "editor.wordBasedSuggestions": false
+        },
+        "dart.debugExternalPackageLibraries": false,
+        "dart.debugSdkLibraries": false
+      }
+    }
+  }
+}
