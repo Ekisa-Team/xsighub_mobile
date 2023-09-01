@@ -84,5 +84,5 @@ git push origin HEAD
 echo "Pushed pubspec.yaml changes"
 
 # Push git tag
-git push origin $new_version_prefixed
+git push origin "$new_version_prefixed"
 echo "Pushed git tag $new_version_prefixed. Check https://github.com/Ekisa-Team/xsighub_mobile/actions to follow up the active workflow."
