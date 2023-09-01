@@ -15,7 +15,7 @@ class Session {
   });
 
   factory Session.fromJson(Map<String, dynamic> json) {
-    final referencesJson = json['references'] as List<dynamic>;
+    final referencesJson = (json['references'] ?? []) as List<dynamic>;
     final references = referencesJson
         .map((referenceJson) => SessionReference.fromJson(referenceJson))
         .toList();

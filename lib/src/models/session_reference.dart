@@ -21,11 +21,11 @@ class SessionReference {
   });
 
   factory SessionReference.fromJson(Map<String, dynamic> json) {
-    final signatures = (json['signatures'] as List<dynamic>)
+    final signatures = ((json['signatures'] ?? []) as List<dynamic>)
         .map((signatureJson) => SessionSignature.fromJson(signatureJson))
         .toList();
 
-    final documents = (json['documents'] as List<dynamic>)
+    final documents = ((json['documents'] ?? []) as List<dynamic>)
         .map((documentJson) => SessionDocument.fromJson(documentJson))
         .toList();
 

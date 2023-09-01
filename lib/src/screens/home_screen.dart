@@ -58,8 +58,6 @@ class _HomeScreenState extends State<HomeScreen> {
         await _connect();
       }
     });
-
-    _setupSocketEvents();
   }
 
   @override
@@ -198,6 +196,8 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       await _pairSession();
+
+      _setupSocketEvents();
 
       _socket.connect();
     } catch (error) {
