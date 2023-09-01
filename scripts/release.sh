@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Prompt for release type
-read -p "Enter release type (major, minor, patch): " release_type
+read -rp "Enter release type (major, minor, patch): " release_type
 
 # Validate release type
 case $release_type in
@@ -13,7 +13,7 @@ major | minor | patch) ;;
 esac
 
 # Prompt for release scope
-read -p "Do you want to specify a release scope? (y/n): " prompt_scope
+read -rp "Do you want to specify a release scope? (y/n): " prompt_scope
 
 # Convert input to lowercase
 prompt_scope=$(echo "$prompt_scope" | tr '[:upper:]' '[:lower:]')
@@ -21,7 +21,7 @@ prompt_scope=$(echo "$prompt_scope" | tr '[:upper:]' '[:lower:]')
 # Validate release scope
 case $prompt_scope in
 y | yes)
-    read -p "Enter release scope (stable | beta | alpha): " release_scope
+    read -rp "Enter release scope (stable | beta | alpha): " release_scope
 
     # Convert input to lowercase
     release_scope=$(echo "$release_scope" | tr '[:upper:]' '[:lower:]')
@@ -50,13 +50,13 @@ version=$(grep 'version:' pubspec.yaml | awk '{print $2}')
 # Determine new version
 case $release_type in
 major)
-    new_version=$(echo $version | awk -F. -v OFS=. '{$1++; $2=0; $3=0} {print $0}')
+    new_version=$(echo "$version" | awk -F. -v OFS=. '{$1++; $2=0; $3=0} {print $0}')
     ;;
 minor)
-    new_version=$(echo $version | awk -F. -v OFS=. '{$2++; $3=0} {print $0}')
+    new_version=$(echo "$version" | awk -F. -v OFS=. '{$2++; $3=0} {print $0}')
     ;;
 patch)
-    new_version=$(echo $version | awk -F. -v OFS=. '{$3++} {print $0}')
+    new_version=$(echo "$version" | awk -F. -v OFS=. '{$3++} {print $0}')
     ;;
 esac
 
