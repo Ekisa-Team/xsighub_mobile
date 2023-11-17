@@ -13,7 +13,6 @@ import 'package:xsighub_mobile/src/services/session_document_service.dart';
 import 'package:xsighub_mobile/src/services/session_service.dart';
 import 'package:xsighub_mobile/src/theme/button.dart';
 import 'package:xsighub_mobile/src/widgets/qr_scanner_button.dart';
-import 'package:xsighub_mobile/src/widgets/version_text.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -102,10 +101,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
               ],
             ),
-            const Align(
-              alignment: Alignment.bottomCenter,
-              child: VersionTextWidget(),
-            ),
           ],
         ),
       ),
@@ -176,6 +171,13 @@ class _HomeScreenState extends State<HomeScreen> {
       _session = await _sessionService.findByPairingKey(
         _pairingKeyController.text,
       );
+
+      if (_session != null) {
+        _socket.emit('handshake', {
+          'sessionId': _session?.id,
+          'client': 'mobile',
+        });
+      }
 
       if (context.mounted && _session!.references!.isEmpty) {
         showDialog(
