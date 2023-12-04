@@ -228,7 +228,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       prefs.remove('pairingKey');
-
       _resetState();
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -236,6 +235,10 @@ class _HomeScreenState extends State<HomeScreen> {
           content: Text(error.toString()),
         ),
       );
+
+      final prefs = await SharedPreferences.getInstance();
+      prefs.remove('pairingKey');
+      _resetState();
     }
   }
 
